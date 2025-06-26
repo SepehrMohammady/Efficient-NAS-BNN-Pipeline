@@ -15,7 +15,7 @@ TRAIN_METADATA_CSV_FILENAME = "wake_vision_train_large.csv"
 
 TARGET_OUTPUT_BASE_DIR = "./data/WakeVision_From_Local_SSD_V3" # Incremented version for new run
 TARGET_IMAGE_SIZE = (128, 128) 
-TOTAL_SUBSET_SIZE = 500000      # Keep small (e.g., 50k) until all issues are resolved
+TOTAL_SUBSET_SIZE = 5000      # Keep small (e.g., 50k) until all issues are resolved
 VAL_SPLIT_SIZE = 0.1          
 SEED = 42                      
 IMAGE_FILENAME_COLUMN_IN_CSV = 'filename' 
