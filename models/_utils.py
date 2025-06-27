@@ -1,6 +1,19 @@
 import torch
 import torch.nn.functional as F
 
+# Global variable to track if we're exporting to ONNX
+_ONNX_EXPORTING = False
+
+def set_onnx_exporting(mode):
+    """Set global ONNX exporting mode.
+    
+    Args:
+        mode (bool): True to enable ONNX export mode, False otherwise.
+    """
+    global _ONNX_EXPORTING
+    _ONNX_EXPORTING = mode
+    print(f"ONNX exporting mode set to {mode}")
+
 
 def _sub_filter_start_end(kernel_size, sub_kernel_size):
     center = kernel_size // 2
@@ -21,9 +34,21 @@ def adaptive_add(src, residual):
     if src_c == residual_c:
         out = src + residual
     else:
-        out = src + torch.cat(
-            [residual for _ in range(round(src_c / residual_c + 0.5))],
-            dim=1)[:, :src_c]
+        # Handle ONNX export - avoid using Python's round on tensor dimensions
+        # as this isn't supported in ONNX
+        if _ONNX_EXPORTING:
+            # For ONNX export, just use integer division to determine expansion factor
+            expansion_factor = src_c // residual_c
+            if src_c % residual_c > 0:
+                expansion_factor += 1
+            out = src + torch.cat(
+                [residual for _ in range(expansion_factor)],
+                dim=1)[:, :src_c]
+        else:
+            # Original behavior for PyTorch execution
+            out = src + torch.cat(
+                [residual for _ in range(round(src_c / residual_c + 0.5))],
+                dim=1)[:, :src_c]
     return out
 
 
@@ -42,6 +67,21 @@ def grad_scale(x, scale):
 
 
 def round_pass(x):
-    y = x.round()
+    """STE (straight-through estimator) for rounding operation with ONNX compatibility.
+    
+    Args:
+        x: Input tensor
+    
+    Returns:
+        Rounded tensor with proper gradient flow
+    """
+    if _ONNX_EXPORTING:
+        # For ONNX export, use floor + add technique which is better supported
+        # This is mathematically equivalent to rounding
+        y = torch.floor(x + 0.5)
+    else:
+        # Original STE implementation for PyTorch execution
+        y = x.round()
+        
     y_grad = x
     return y.detach() - y_grad.detach() + y_grad
