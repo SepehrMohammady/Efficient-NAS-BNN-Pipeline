@@ -6,7 +6,7 @@ $DatasetName = "WakeVision"
 $ArchitectureName = "superbnn_wakevision_large"
 $GlobalWorkers = 0 
 
-$DataPath = "./data/WakeVision_From_Local_SSD_V3" 
+$DataPath = "./data/WakeVision_From_Local_SSD_V3" # Dataset path for 500k sample data
 $BaseWorkDir = "./work_dirs/wakevision_nasbnn_LARGEXP_run" 
 $SupernetCheckpointPath = "$BaseWorkDir/checkpoint.pth.tar"
 $SearchOutputDir = "$BaseWorkDir/search"
@@ -38,8 +38,8 @@ $SearchTestBatchSize = 64
 $TestMaxTrainIters = 10
 $TestTrainBatchSize = 64
 $TestTestBatchSize = 64
-$OpsKeyToTest1 = 5    # Updated based on your successful runs
-$OpsKeyToTest2 = 6    # Updated based on your successful runs
+$OpsKeyToTest1 = 4    # Updated based on results from 500k dataset
+$OpsKeyToTest2 = 5    # Updated based on results from 500k dataset
 
 # Fine-tuning Params for WakeVision
 $FinetuneBatchSize = 64
@@ -50,7 +50,7 @@ $FinetuneEpochs = 50
 # --- Script Execution ---
 
 Write-Host "--------------------------------------------------------------------"
-Write-Host "NAS-BNN CIFAR-10 Pipeline Started (with Timers)"
+Write-Host "NAS-BNN WakeVision Pipeline Started (with Timers)"
 $PipelineStartTime = Get-Date
 Write-Host "Overall Start Time: $($PipelineStartTime.ToString('yyyy-MM-dd HH:mm:ss'))"
 Write-Host "--------------------------------------------------------------------"
@@ -70,11 +70,12 @@ Write-Host "---------------------------------"
 
 # Step 0
 $Step0StartTime = Get-Date
-Write-Host "Step 0: Preparing CIFAR-10 Data (Started at $(Get-Date -Format 'HH:mm:ss'))..."
-python prepare_cifar10.py 
+Write-Host "Step 0: Preparing WakeVision Data (Started at $(Get-Date -Format 'HH:mm:ss'))..."
+Write-Host "INFO: Using prepare_local_wake_vision_from_csv.py with TOTAL_SUBSET_SIZE = 500000"
+python prepare_local_wake_vision_from_csv.py
 if ($LASTEXITCODE -ne 0) { Write-Error "FATAL: Error in data preparation. Exiting."; exit 1 }
 $Step0Duration = New-TimeSpan -Start $Step0StartTime -End (Get-Date)
-Write-Host "INFO: CIFAR-10 Data Preparation complete. Duration: $($Step0Duration.ToString()). Data in '$DataPath'"
+Write-Host "INFO: WakeVision Data Preparation complete. Duration: $($Step0Duration.ToString()). Data in '$DataPath'"
 Write-Host "---------------------------------"
 
 # Step 0.5
@@ -96,6 +97,7 @@ if (-not (Test-Path $BaseWorkDir)) {
 python train.py `
     --dataset $DatasetName `
     -a $ArchitectureName `
+    --img-size $WakeVisionImgSize `
     -b $TrainSupernetBatchSize `
     --lr $TrainSupernetLR `
     --wd $TrainSupernetWD `
@@ -123,6 +125,7 @@ if (-not (Test-Path $SearchOutputDir)) {
 python search.py `
     --dataset $DatasetName `
     -a $ArchitectureName `
+    --img-size $WakeVisionImgSize `
     --max-epochs $SearchMaxEpochs `
     --population-num $SearchPopulationNum `
     --m-prob $SearchMProb `
@@ -165,6 +168,7 @@ if (-not (Test-Path $TestOutputDir1)) {
 python test.py `
     --dataset $DatasetName `
     -a $ArchitectureName `
+    --img-size $WakeVisionImgSize `
     --ops $OpsKeyToTest1 `
     --max-train-iters $TestMaxTrainIters `
     --train-batch-size $TestTrainBatchSize `
@@ -192,6 +196,7 @@ if (-not (Test-Path $TestOutputDir2)) {
 python test.py `
     --dataset $DatasetName `
     -a $ArchitectureName `
+    --img-size $WakeVisionImgSize `
     --ops $OpsKeyToTest2 `
     --max-train-iters $TestMaxTrainIters `
     --train-batch-size $TestTrainBatchSize `
@@ -219,6 +224,7 @@ if (-not (Test-Path $FinetuneOutputDir1)) {
 python train_single.py `
     --dataset $DatasetName `
     -a $ArchitectureName `
+    --img-size $WakeVisionImgSize `
     -b $FinetuneBatchSize `
     --lr $FinetuneLR `
     --wd $FinetuneWD `
@@ -247,6 +253,7 @@ if (-not (Test-Path $FinetuneOutputDir2)) {
 python train_single.py `
     --dataset $DatasetName `
     -a $ArchitectureName `
+    --img-size $WakeVisionImgSize `
     -b $FinetuneBatchSize `
     --lr $FinetuneLR `
     --wd $FinetuneWD `
@@ -263,10 +270,113 @@ $Step4bDuration = New-TimeSpan -Start $Step4bStartTime -End (Get-Date)
 Write-Host "INFO: Fine-tuning for OPs Key $OpsKeyToTest2 Done. Duration: $($Step4bDuration.ToString())"
 Write-Host "---------------------------------"
 
+# Step 5: ONNX Export
+$Step5StartTime = Get-Date
+Write-Host "Step 5: Exporting to ONNX Format (Started at $(Get-Date -Format 'HH:mm:ss'))..."
+$OnnxOutputPath = "$BaseWorkDir/onnx_export"
+if (-not (Test-Path $OnnxOutputPath)) { 
+    Write-Host "INFO: Creating directory $OnnxOutputPath"
+    New-Item -ItemType Directory -Force -Path $OnnxOutputPath | Out-Null 
+}
+
+# Use the best performing model for export (Key 5 based on results)
+$BestOpsKey = $OpsKeyToTest2  # This is 5 based on our updated results
+$FinetunedModelPath = "$BaseWorkDir/finetuned_ops_key$BestOpsKey/checkpoint.pth.tar"
+$OnnxFilename = "superbnn_wakevision_ops$BestOpsKey.onnx"
+$FullOnnxPath = "$OnnxOutputPath/$OnnxFilename"
+
+Write-Host "INFO: Exporting model with OPs Key $BestOpsKey to ONNX..."
+Write-Host "INFO: Source model: $FinetunedModelPath"
+Write-Host "INFO: Target ONNX: $FullOnnxPath"
+
+# This is a placeholder - in the notebook this is custom code
+# We'd need to create a dedicated Python script for ONNX export
+python -c @"
+import os
+import torch
+import models
+from models._utils import set_onnx_exporting
+
+print('Preparing to export finetuned model to ONNX...')
+model_name = '$ArchitectureName'
+checkpoint_path = '$FinetunedModelPath'
+output_path = '$FullOnnxPath'
+img_size = $WakeVisionImgSize
+
+try:
+    # Create the model
+    if 'wakevision' in model_name.lower():
+        model_to_export = models.__dict__[model_name](img_size=img_size)
+    else:
+        model_to_export = models.__dict__[model_name]()
+
+    # Load search info to get architecture
+    search_info = torch.load('$SearchInfoFile', map_location='cpu')
+    arch_tuple = search_info['pareto_global'][$BestOpsKey]['cand']
+    structured_arch_list = []
+    for i in range(len(arch_tuple)):
+        block = []
+        for j in range(len(arch_tuple[i])):
+            block.append(int(arch_tuple[i][j]))
+        structured_arch_list.append(block)
+
+    print(f'Using architecture: {structured_arch_list}')
+    
+    # Set up input shape
+    dummy_input_shape = (1, 3, img_size, img_size)
+    dummy_input = torch.randn(dummy_input_shape, dtype=torch.float32)
+    
+    # Configure model for static architecture
+    model_to_export.sub_path = structured_arch_list
+    _, _ = model_to_export.to_static(dummy_input)
+    
+    # Load weights
+    checkpoint = torch.load(checkpoint_path, map_location='cpu')
+    state_dict = checkpoint['state_dict']
+    new_state_dict = {(k[7:] if k.startswith('module.') else k): v for k, v in state_dict.items()}
+    model_to_export.load_state_dict(new_state_dict, strict=False)
+    
+    # Test forward pass
+    dummy_input_for_onnx = torch.randn(dummy_input_shape, device='cpu', dtype=torch.float32)
+    set_onnx_exporting(True)
+    
+    class ONNXExportWrapper(torch.nn.Module):
+        def __init__(self, model):
+            super().__init__()
+            self.model = model
+        
+        def forward(self, x):
+            output, _ = self.model(x)
+            return output
+    
+    wrapped_model = ONNXExportWrapper(model_to_export)
+    
+    # Export to ONNX
+    print(f'Exporting to ONNX: {output_path}')
+    torch.onnx.export(
+        wrapped_model,
+        dummy_input_for_onnx,
+        output_path,
+        input_names=['input_image'],
+        output_names=['output_predictions'],
+        opset_version=12,
+        do_constant_folding=True
+    )
+    print(f'ONNX export successful: {output_path}')
+except Exception as e:
+    print(f'ERROR during ONNX export: {e}')
+    import traceback
+    traceback.print_exc()
+"@
+
+$Step5Duration = New-TimeSpan -Start $Step5StartTime -End (Get-Date)
+Write-Host "INFO: ONNX Export complete. Duration: $($Step5Duration.ToString())"
+Write-Host "---------------------------------"
+
 $PipelineEndTime = Get-Date
 $PipelineTotalDuration = New-TimeSpan -Start $PipelineStartTime -End $PipelineEndTime
 Write-Host "--------------------------------------------------------------------"
-Write-Host "NAS-BNN CIFAR-10 Pipeline Script Finished Successfully."
+Write-Host "NAS-BNN WakeVision Pipeline Script Finished Successfully."
 Write-Host "Overall End Time: $($PipelineEndTime.ToString('yyyy-MM-dd HH:mm:ss'))"
 Write-Host "Overall Pipeline Duration: $($PipelineTotalDuration.ToString())"
 Write-Host "--------------------------------------------------------------------"
