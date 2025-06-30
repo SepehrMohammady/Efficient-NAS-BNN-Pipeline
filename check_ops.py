@@ -12,10 +12,8 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--arch', default='superbnn_wakevision_large', 
                         choices=model_names,
                         help='Model architecture to check')
-    # VVVVVV ADD THIS ARGUMENT VVVVVV
     parser.add_argument('--img-size', type=int, default=128, # Default to 128 for WakeVision if not specified
                         help='Input image size (square) for the model, e.g., 32, 128, 224')
-    # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     args = parser.parse_args()
 
     print(f"Checking OPs for architecture: {args.arch} with image size: {args.img_size}x{args.img_size}")

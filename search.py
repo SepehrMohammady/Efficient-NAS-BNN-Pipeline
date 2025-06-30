@@ -2,7 +2,7 @@
 
 import argparse
 import logging
-import os # Make sure os is imported if not already
+import os
 import os.path as osp
 import random
 import time
@@ -183,7 +183,6 @@ class EvolutionSearcher:
             train_dataset = datasets.ImageFolder(traindir, train_transform)
             val_dataset = datasets.ImageFolder(valdir, val_transform)
         
-        # VVVVVV ADDED BLOCK FOR WAKEVISION VVVVVV
         elif args.dataset == 'WakeVision':
             # Get image size from args.img_size (ensure this arg is added to search.py parser)
             # The default in train.py was 128. Ensure consistency.
@@ -212,7 +211,6 @@ class EvolutionSearcher:
             
             train_dataset = datasets.ImageFolder(traindir, train_transform)
             val_dataset = datasets.ImageFolder(valdir, val_transform)
-        # ^^^^^^ END OF ADDED BLOCK ^^^^^^
         
         else:
             if self.logger and is_first_gpu(self.args, self.ngpus_per_node): # Check if logger is available
