@@ -4,11 +4,11 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org)
 [![CUDA](https://img.shields.io/badge/CUDA-11.0+-green.svg)](https://developer.nvidia.com/cuda-toolkit)
 
-## 🎯 **Major Updates - WakeVision Integration Complete**
+## 🎯 **Major Updates - WakeVision Integration with 500k Sample Dataset**
 
 ### ✅ **Successfully Adapted NAS-BNN for Person Detection**
-- **🏆 Achieved 72% accuracy** on WakeVision person detection after fine-tuning
-- **📈 4.2% improvement** from initial architecture search results
+- **🏆 Achieved 88.81% accuracy** on WakeVision person detection after fine-tuning
+- **📈 1.13% improvement** from initial architecture search results
 - **⚡ Optimized architectures** with 3.8M-6.2M operations for edge deployment
 - **📊 Complete Pareto front analysis** with 4 optimal architectures discovered
 
@@ -26,13 +26,14 @@
 ### **Architecture Search Results:**
 | OPs Key | Operations (M) | Search Accuracy | Test Accuracy | Fine-tuned Accuracy | Improvement |
 |---------|----------------|-----------------|---------------|-------------------|-------------|
-| **5** ⭐ | 5.81M | 67.8% | 67.40% | **72.0%** | **+4.2%** |
-| **6**   | 6.16M | 67.4% | 65.80% | 67.80% | +0.4% |
+| **4** | 4.93M | 87.40% | 87.79% | **88.77%** | **+0.98%** |
+| **5** ⭐ | 5.23M | 87.77% | 87.68% | **88.81%** | **+1.13%** |
 
 ### **Key Findings:**
-- **Key 5 is the optimal choice**: Lower computational cost + higher accuracy
+- **Key 5 is the optimal choice**: Best accuracy with reasonable computational cost
 - **Successful fine-tuning**: Significant accuracy improvements achieved
 - **Edge-ready deployment**: Models optimized for resource-constrained devices
+- **Larger dataset provides better results**: Training with 500,000 samples yielded higher accuracy
 
 ---
 
