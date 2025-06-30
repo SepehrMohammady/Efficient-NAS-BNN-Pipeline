@@ -4,6 +4,16 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org)
 [![CUDA](https://img.shields.io/badge/CUDA-11.0+-green.svg)](https://developer.nvidia.com/cuda-toolkit)
 
+## 🔍 **Projects at a Glance**
+
+| Repository | Purpose | Key Features |
+|------------|---------|--------------|
+| [VDIGPKU/NAS-BNN](https://github.com/VDIGPKU/NAS-BNN) | Original Implementation | NAS-BNN framework for ImageNet, Linux/multi-GPU focus |
+| [NAS-BNN-CIFAR10-Exploration](https://github.com/SepehrMohammady/NAS-BNN-CIFAR10-Exploration) | CIFAR-10 Adaptation | Windows compatibility, CIFAR-10 support, resume logic |
+| [Efficient-NAS-BNN-Pipeline](https://github.com/SepehrMohammady/Efficient-NAS-BNN-Pipeline) (this repo) | Multi-Dataset Pipeline | WakeVision support, unified workflow, enhanced analysis tools |
+
+**This repository consolidates the previous work and is the recommended version for all use cases.**
+
 ## 🎯 **Major Updates - WakeVision Integration with 500k Sample Dataset**
 
 ### ✅ **Successfully Adapted NAS-BNN for Person Detection**
@@ -34,6 +44,19 @@
 - **Successful fine-tuning**: Significant accuracy improvements achieved
 - **Edge-ready deployment**: Models optimized for resource-constrained devices
 - **Larger dataset provides better results**: Training with 500,000 samples yielded higher accuracy
+
+---
+
+## 🔍 **Project Origins & Acknowledgment**
+
+### **Original Work**
+This project is based on the official implementation of **["NAS-BNN: Neural Architecture Search for Binary Neural Networks"](https://arxiv.org/abs/2408.15484)** by [VDIGPKU/NAS-BNN](https://github.com/VDIGPKU/NAS-BNN).
+
+### **Development History**
+- **Initial Adaptation**: First adapted for CIFAR-10 in the [NAS-BNN-CIFAR10-Exploration](https://github.com/SepehrMohammady/NAS-BNN-CIFAR10-Exploration) repository, which focused on extending the original work to smaller datasets with enhanced Windows compatibility.
+- **Current Repository**: This repository consolidates and extends both works with multi-dataset support, focusing on WakeVision for person detection, while maintaining support for ImageNet and CIFAR-10.
+
+The original README from the authors is preserved in `README-Authors.md`.
 
 ---
 
@@ -165,11 +188,23 @@ Contributions are welcome! Please feel free to submit:
 
 ---
 
-## 📄 **Citation**
+## 📄 **Citation and License**
 
-If you use this work, please cite:
+### **Citation**
+If you use this work, please cite both the original NAS-BNN paper and this adaptation:
+
 ```bibtex
-@article{nas-bnn-wakevision-2025,
+@article{wang2024nasbnn,
+  title={NAS-BNN: Neural Architecture Search for Binary Neural Networks},
+  author={Wang, Yingting and Zhang, Huixia and Chen, Sheng and Li, Jiashuai and Xu, Chang and Lin, Mingbao and Yan, Junchi},
+  journal={Pattern Recognition},
+  volume={147},
+  pages={110001},
+  year={2024},
+  publisher={Elsevier}
+}
+
+@article{mohammady2025efficient,
   title={Efficient NAS-BNN Pipeline: Multi-Dataset Neural Architecture Search for Binary Neural Networks},
   author={Sepehr Mohammady},
   journal={GitHub Repository},
@@ -177,6 +212,10 @@ If you use this work, please cite:
   year={2025}
 }
 ```
+
+### **License**
+- The **original NAS-BNN code** is available for academic research purposes only, and requires authorization for commercial use (see `README-Authors.md`). For commercial permission, please contact wyt@pku.edu.cn.
+- **Modifications and additions** in this repository are provided under the MIT License (see `LICENSE`).
 
 ---
 
