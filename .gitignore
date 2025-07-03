@@ -4,6 +4,17 @@ venv/
 env/
 .venv/
 
+# Ignore unwanted deployment files (removed by user request)
+PI_ONLINE_SERVICES_GUIDE.md
+RASPBERRY_PI_DEPLOYMENT.md
+raspberry_pi_deployment_guide.py
+raspberry_pi_online_services.py
+simple_stm32_check.py
+stm32_analysis_guide.md
+stm32_model_optimizer.py
+stm32_troubleshooting_guide.md
+analyze_model_for_stm32.py
+
 # Training outputs and data
 work_dirs/
 data/
