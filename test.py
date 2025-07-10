@@ -156,7 +156,7 @@ def main_worker(gpu, ngpus_per_node, args):
     # tuple2cand converts the flat tuple from info.pth.tar into the N x 6 tensor
     arch_cand_tensor = tuple2cand(arch_tuple) 
 
-    model = models.__dict__[args.arch](sub_path=arch_cand_tensor) 
+    model = models.__dict__[args.arch](sub_path=arch_cand_tensor, img_size=args.img_size) 
 
     flops, bitops, total_flops = model.get_ops() # Uses model.sub_path_config_for_static_model which is arch_cand_tensor
     

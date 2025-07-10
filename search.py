@@ -84,6 +84,10 @@ parser.add_argument('--multiprocessing-distributed',
                     'N processes per node, which has N GPUs. This is the '
                     'fastest way to use PyTorch for either single node or '
                     'multi node data parallel training')
+parser.add_argument('--img-size', 
+                    type=int, 
+                    default=128,
+                    help='image size for training (default: 128)')
 # --- End Argument Parser ---
 
 
@@ -750,7 +754,10 @@ def main_worker(gpu, ngpus_per_node, args):
     t_start_main_worker = time.time() # For total time logging
     if is_first_gpu(args, ngpus_per_node) and logger:
         logger.info(f"=> creating model '{args.arch}'")
-    model = models.__dict__[args.arch]()
+    
+    # Pass img_size to model constructor to ensure spatial dimensions match
+    img_size = getattr(args, 'img_size', 128)
+    model = models.__dict__[args.arch](img_size=img_size)
 
     if os.path.isfile(args.supernet):
         if is_first_gpu(args, ngpus_per_node) and logger:

@@ -474,7 +474,7 @@ def superbnn_cifar10_large(sub_path=None):
     # which is the max channels of the last stage (e.g., 1024 or 2048).
     return SuperBNN(cfg, n_class=10, img_size=32, sub_path=sub_path)
 
-def superbnn_wakevision_large(sub_path=None, img_size=128): # Accept img_size, provide a default
+def superbnn_wakevision_large(sub_path=None, img_size=64): # Match the data preparation size
     cfg = [
         # Your defined CFG for superbnn_wakevision_large
         [[32, 48, 64],    [1],       [3,5],    [1],    [1],    2], 

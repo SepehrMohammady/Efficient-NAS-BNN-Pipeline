@@ -268,7 +268,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # Create model with specific architecture
     if logger and is_first_gpu(args, ngpus_per_node): logger.info(f"=> Creating model '{args.arch}' with specific sub_path")
-    model = models.__dict__[args.arch](sub_path=arch_cand_tensor)
+    model = models.__dict__[args.arch](sub_path=arch_cand_tensor, img_size=args.img_size)
 
     # Load pretrained supernet weights
     if args.pretrained:

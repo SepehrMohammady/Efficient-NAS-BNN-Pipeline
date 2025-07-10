@@ -4,6 +4,12 @@ venv/
 env/
 .venv/
 
+# Local backup folder
+_Local Backup/
+
+# Paper (until supervisor approval)
+NAS_BNN_WakeVision_Person_Detection.md
+
 # Ignore unwanted deployment files (removed by user request)
 PI_ONLINE_SERVICES_GUIDE.md
 RASPBERRY_PI_DEPLOYMENT.md
