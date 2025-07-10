@@ -145,6 +145,9 @@ Key configuration parameters are set at the beginning of the `run_all.ipynb` not
 dataset_name = "WakeVision"  # Options: "WakeVision", "CIFAR10", "ImageNet"
 architecture_name = "superbnn_wakevision_large"  # Model architecture name
 
+# Image Size Configuration (CRITICAL: Must be consistent across all components)
+wakevision_img_size = 128  # Options: 64 or 128 pixels
+
 # Training parameters
 train_supernet_epochs = 120
 train_supernet_batch_size = 128
@@ -169,6 +172,39 @@ finetune_batch_size = 128
 finetune_lr = "0.01"
 finetune_wd = 1e-4
 ```
+
+### ⚠️ Critical: Image Size Consistency
+
+For WakeVision, the image size configuration must be consistent across multiple components:
+
+1. **Model Architecture** (`models/superbnn.py`):
+   ```python
+   def superbnn_wakevision_large(sub_path=None, img_size=128):  # Default: 128
+   ```
+
+2. **Data Preparation** (`prepare_local_wake_vision_from_csv.py`):
+   ```python
+   TARGET_IMAGE_SIZE = (128, 128)  # Must match model img_size
+   ```
+
+3. **Pipeline Configuration** (`run_all.ipynb`):
+   ```python
+   wakevision_img_size = 128  # Must match model and data preparation
+   ```
+
+4. **ONNX Export** (automatic):
+   ```python
+   dummy_input_shape = (1, 3, wakevision_img_size, wakevision_img_size)
+   ```
+
+**Common Configurations:**
+- **128×128**: Better accuracy, higher computational cost, default configuration
+- **64×64**: Faster training/inference, lower accuracy, suitable for very constrained devices
+
+**⚠️ Mismatch Consequences:** Inconsistent image sizes will cause:
+- Training failures with shape mismatch errors
+- ONNX export failures with assertion errors
+- Poor model performance due to unexpected input dimensions
 
 <a name="dataset-preparation"></a>
 ## 4. Dataset Preparation
@@ -219,8 +255,18 @@ If you don't have the data locally, the pipeline can download it from HuggingFac
 # In run_all.ipynb
 !python prepare_wakevision.py \
     --output_dir data/wakevision \
-    --img_size 128
+    --img_size 128  # Must match wakevision_img_size in configuration
 ```
+
+**Image Size Configuration:**
+- Update `TARGET_IMAGE_SIZE` in `prepare_local_wake_vision_from_csv.py` to match your choice:
+  ```python
+  TARGET_IMAGE_SIZE = (128, 128)  # For 128×128 models
+  # OR
+  TARGET_IMAGE_SIZE = (64, 64)    # For 64×64 models
+  ```
+- Ensure `wakevision_img_size` in `run_all.ipynb` matches this setting
+- Verify `superbnn_wakevision_large(img_size=X)` uses the same value
 
 <a name="cifar-10-dataset"></a>
 ### CIFAR-10 Dataset
@@ -533,11 +579,22 @@ The export process:
 
 When deploying the exported models:
 
-1. **File Size**: The ONNX model file is approximately 17.0 MB for the Key 6 WakeVision model
-2. **Input Format**: The model expects 128x128 RGB images in NCHW format (batch, channels, height, width)
+1. **File Size**: The ONNX model file size varies by configuration:
+   - 128×128 models: ~17.0 MB 
+   - 64×64 models: ~12.0 MB (smaller due to fewer parameters)
+
+2. **Input Format**: The model expects RGB images in NCHW format (batch, channels, height, width):
+   - 128×128 models: Input shape (1, 3, 128, 128)
+   - 64×64 models: Input shape (1, 3, 64, 64)
+
 3. **Preprocessing**: Images should be normalized to the [0,1] range
+
 4. **Output Interpretation**: For WakeVision, the output is a binary classification (person/no-person)
-5. **Inference Speed**: Approximately 15ms on NVIDIA RTX GPUs, will vary on edge devices
+
+5. **Inference Speed**: Performance varies by image size and hardware:
+   - 128×128: ~15ms on NVIDIA RTX GPUs
+   - 64×64: ~8ms on NVIDIA RTX GPUs
+   - Edge device performance will vary significantly
 
 <a name="troubleshooting"></a>
 ## 12. Troubleshooting
@@ -566,6 +623,22 @@ When deploying the exported models:
 4. **Log Parsing Errors**
    - **Symptoms**: "Could not parse accuracy from log" messages
    - **Solution**: Check the log file format and adjust the parsing function if needed
+
+5. **Image Size Mismatch Errors** 🚨
+   - **Symptoms**: 
+     - `AssertionError` during ONNX export: `assert x.shape[-1] == self.wh`
+     - Shape mismatch errors during training
+     - Model loading failures
+   - **Solutions**:
+     - Verify image size consistency across all components:
+       ```python
+       # Check these files have matching image sizes:
+       # 1. models/superbnn.py: superbnn_wakevision_large(img_size=128)
+       # 2. prepare_local_wake_vision_from_csv.py: TARGET_IMAGE_SIZE = (128, 128)
+       # 3. run_all.ipynb: wakevision_img_size = 128
+       ```
+     - If changing image size, update ALL three locations before retraining
+     - Delete existing work_dirs/ if switching image sizes to avoid cached models
 
 <a name="solutions"></a>
 ### Solutions

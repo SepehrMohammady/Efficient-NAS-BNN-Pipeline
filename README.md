@@ -75,15 +75,41 @@ pip install -r requirements.txt
 # In run_all.ipynb Cell 2 - Configuration
 dataset_name = "WakeVision"
 architecture_name = "superbnn_wakevision_large"
-wakevision_img_size = 128
+wakevision_img_size = 128  # Image size (64 or 128) - must match across all components
+
+# ⚠️ IMPORTANT: Image size consistency required!
+# - superbnn.py: superbnn_wakevision_large(img_size=128)  
+# - prepare_local_wake_vision_from_csv.py: TARGET_IMAGE_SIZE = (128, 128)
+# - run_all.ipynb: wakevision_img_size = 128
 ```
 
 ### **3. Prepare Data**
 Choose your data preparation method:
-- **Local CSV**: Use existing local WakeVision data and CSV files
+- **Local CSV**: Use existing local WakeVision data and CSV files  
 - **Online**: Automatic download from HuggingFace datasets
 
-### **4. Run Complete Pipeline**
+**⚠️ Important:** Ensure image size consistency across all components before starting!
+
+### **4. Image Size Consistency Checklist** ✅
+Before running the pipeline, verify these three files have matching image sizes:
+
+```bash
+# 1. Check model architecture (should be 128 for best results)
+grep "def superbnn_wakevision_large" models/superbnn.py
+# Expected: def superbnn_wakevision_large(sub_path=None, img_size=128):
+
+# 2. Check data preparation script
+grep "TARGET_IMAGE_SIZE" prepare_local_wake_vision_from_csv.py  
+# Expected: TARGET_IMAGE_SIZE = (128, 128)
+
+# 3. Check notebook configuration (Cell 2)
+grep "wakevision_img_size" run_all.ipynb
+# Expected: wakevision_img_size = 128
+```
+
+**If values don't match:** Update all three locations to use the same size before training!
+
+### **5. Run Complete Pipeline**
 Execute cells sequentially in `run_all.ipynb`:
 1. **Data Preparation** → 2. **Supernet Training** → 3. **Architecture Search** → 4. **Testing & Fine-tuning** → 5. **Analysis & Export**
 
