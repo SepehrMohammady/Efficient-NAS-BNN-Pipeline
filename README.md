@@ -121,76 +121,13 @@ Execute cells sequentially in `run_all.ipynb`:
 ### **Complete NAS-BNN Workflow**
 
 ```mermaid
-graph TB
-    %% Data Preparation Stage
-    subgraph DP[Data Preparation]
-        A1[WakeVision Dataset<br/>500k Images]
-        A2[Image Processing<br/>128×128 Resize]
-        A3[Data Validation<br/>Size Consistency]
-        A1 --> A2 --> A3
-    end
-
-    %% Supernet Training Stage  
-    subgraph ST[Supernet Training]
-        B1[Architecture Definition<br/>superbnn_wakevision_large]
-        B2[Binary Weight Training<br/>120 Epochs]
-        B3[Weight Sharing<br/>Subnetwork Sampling]
-        B1 --> B2 --> B3
-    end
-
-    %% Architecture Search Stage
-    subgraph AS[Neural Architecture Search] 
-        C1[Population Init<br/>50 Architectures]
-        C2[Evolutionary Search<br/>10 Generations]
-        C3[Pareto Optimization<br/>Accuracy vs Efficiency]
-        C4[Optimal Solutions<br/>Key 3,4,5,6]
-        C1 --> C2 --> C3 --> C4
-    end
-
-    %% Testing & Fine-tuning Stage
-    subgraph TF[Testing & Fine-tuning]
-        D1[Architecture Testing<br/>Key 5 & 6]
-        D2[Performance Validation<br/>87.7-87.8%]
-        D3[Fine-tuning Training<br/>From Scratch]
-        D4[Final Results<br/>88.81% Accuracy]
-        D1 --> D2 --> D3 --> D4
-    end
-
-    %% Export & Deployment Stage
-    subgraph ED[Export & Deployment]
-        E1[Model Selection<br/>Key 5 or Key 6]
-        E2[ONNX Export<br/>Optimization]
-        E3[Deployment Package<br/>17-18 MB]
-        E1 --> E2 --> E3
-    end
-
-    %% Main Flow
-    DP --> ST
-    ST --> AS  
-    AS --> TF
-    TF --> ED
-
-    %% Key Results
-    AR1[Key Results<br/>Key 5: 5.236M ops, 88.81%<br/>Key 6: 6.026M ops, 88.81%<br/>ONNX: 17-18 MB<br/>Edge-ready deployment]
-    
-    %% Connect annotation
-    ED -.-> AR1
-
-    %% Styling
-    classDef dataStyle fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
-    classDef trainStyle fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px
-    classDef searchStyle fill:#E8F5E8,stroke:#388E3C,stroke-width:2px
-    classDef testStyle fill:#FFF3E0,stroke:#F57C00,stroke-width:2px
-    classDef exportStyle fill:#FCE4EC,stroke:#C2185B,stroke-width:2px
-    classDef resultStyle fill:#FFFDE7,stroke:#F9A825,stroke-width:2px
-
-    %% Apply Styles
-    class A1,A2,A3 dataStyle
-    class B1,B2,B3 trainStyle  
-    class C1,C2,C3,C4 searchStyle
-    class D1,D2,D3,D4 testStyle
-    class E1,E2,E3 exportStyle
-    class AR1 resultStyle
+graph TD
+    A[Dataset Preparation] --> B[Supernet Training]
+    B --> C[Evolutionary Search]
+    C --> D[Architecture Testing]
+    D --> E[Fine-tuning]
+    E --> F[Analysis & Visualization]
+    F --> G[ONNX Export]
 ```
 
 ### **🔄 Pipeline Flow Highlights**
