@@ -124,7 +124,6 @@ Execute cells sequentially in `run_all.ipynb`:
 flowchart TD
     %% Data Preparation Stage
     subgraph DP ["🗃️ Data Preparation"]
-        direction TB
         A1("WakeVision Dataset<br/>📊 500k Images")
         A2("Image Processing<br/>🖼️ 128×128 Resize")
         A3("Data Validation<br/>✅ Size Consistency")
@@ -133,7 +132,6 @@ flowchart TD
 
     %% Supernet Training Stage  
     subgraph ST ["🏗️ Supernet Training"]
-        direction TB
         B1("Architecture Definition<br/>🧠 superbnn_wakevision_large")
         B2("Binary Weight Training<br/>⚡ 120 Epochs")
         B3("Weight Sharing<br/>🔄 Subnetwork Sampling")
@@ -142,7 +140,6 @@ flowchart TD
 
     %% Architecture Search Stage
     subgraph AS ["🔍 Neural Architecture Search"] 
-        direction TB
         C1("Population Init<br/>👥 50 Architectures")
         C2("Evolutionary Search<br/>🧬 10 Generations")
         C3("Pareto Optimization<br/>⚖️ Accuracy vs Efficiency")
@@ -152,7 +149,6 @@ flowchart TD
 
     %% Testing & Fine-tuning Stage
     subgraph TF ["🧪 Testing & Fine-tuning"]
-        direction TB
         D1("Architecture Testing<br/>📊 Key 5 & 6")
         D2("Performance Validation<br/>✅ 87.7-87.8%")
         D3("Fine-tuning Training<br/>🎯 From Scratch")
@@ -162,7 +158,6 @@ flowchart TD
 
     %% Export & Deployment Stage
     subgraph ED ["📦 Export & Deployment"]
-        direction TB
         E1("Model Selection<br/>🎯 Key 5 or Key 6")
         E2("ONNX Export<br/>📤 Optimization")
         E3("Deployment Package<br/>🚀 17-18 MB")
