@@ -132,15 +132,15 @@ graph TD
 
 ### **🔄 Pipeline Flow Highlights**
 
-| Stage | Duration | Key Output | Next Action |
-|-------|----------|------------|-------------|
-| **🗃️ Data Prep** | ~1 hour | Formatted dataset | Start supernet training |
-| **🏗️ Supernet** | ~24-48 hours | Trained weights | Launch architecture search |
-| **🔍 Search** | ~6-8 hours | Pareto front | Test best candidates |
-| **🧪 Testing** | ~2-4 hours | Validated archs | Fine-tune winners |
-| **🎯 Fine-tuning** | ~12-24 hours | Optimized models | Analyze & visualize |
-| **📊 Analysis** | ~30 minutes | Performance metrics | Export for deployment |
-| **📦 Export** | ~2 minutes | ONNX models | Deploy to edge |
+| Stage | Key Output | Next Action |
+|-------|------------|-------------|
+| **🗃️ Data Prep** | Formatted dataset | Start supernet training |
+| **🏗️ Supernet** | Trained weights | Launch architecture search |
+| **🔍 Search** | Pareto front | Test best candidates |
+| **🧪 Testing** | Validated archs | Fine-tune winners |
+| **🎯 Fine-tuning** | Optimized models | Analyze & visualize |
+| **📊 Analysis** | Performance metrics | Export for deployment |
+| **📦 Export** | ONNX models | Deploy to edge |
 
 ### **💡 Key Features**
 🎯 **Multi-objective Optimization**: Balances 88.81% accuracy with 5-6M operations  
