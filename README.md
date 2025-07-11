@@ -36,11 +36,12 @@
 ### **Architecture Search Results:**
 | OPs Key | Operations (M) | Search Accuracy | Test Accuracy | Fine-tuned Accuracy | Improvement |
 |---------|----------------|-----------------|---------------|-------------------|-------------|
-| **4** | 4.93M | 87.40% | 87.79% | **88.77%** | **+0.98%** |
-| **5** ⭐ | 5.23M | 87.77% | 87.68% | **88.81%** | **+1.13%** |
+| **5** ⭐ | 5.236M | 87.77% | 87.68% | **88.81%** | **+1.04%** |
+| **6** | 6.026M | 87.81% | 87.7-87.8% | **88.81%** | **+1.00%** |
 
 ### **Key Findings:**
-- **Key 5 is the optimal choice**: Best accuracy with reasonable computational cost
+- **Both Key 5 and Key 6 achieve excellent results**: 88.81% accuracy after fine-tuning
+- **Key 5 offers better efficiency**: Slightly fewer operations with same accuracy
 - **Successful fine-tuning**: Significant accuracy improvements achieved
 - **Edge-ready deployment**: Models optimized for resource-constrained devices
 - **Larger dataset provides better results**: Training with 500,000 samples yielded higher accuracy

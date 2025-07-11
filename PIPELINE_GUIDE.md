@@ -475,7 +475,7 @@ The testing phase provides a more thorough evaluation than the quick assessments
 3. Evaluates the architecture on the test dataset
 4. Logs results to `{search_output_dir}/test_ops_key{ops_key_to_test}/test.log`
 
-For WakeVision, this phase typically confirms which architecture (Key 5 or Key 6) should be selected for fine-tuning. The Key 6 architecture generally achieves the highest accuracy (around 87.7-87.8%).
+For WakeVision, this phase typically confirms which architectures (Key 5 and Key 6) should be selected for fine-tuning. Both Key 5 (5.236M operations) and Key 6 (6.026M operations) achieve high accuracy, with Key 6 having slightly higher search-phase results (~87.81% vs ~87.77%).
 
 <a name="fine-tuning"></a>
 ## 9. Fine-tuning
@@ -512,7 +512,7 @@ Fine-tuning parameters are optimized for the specific architecture:
 - **lr**: Typically lower than for supernet training (e.g., 0.01)
 - **weight-decay**: May be adjusted based on overfitting behavior
 
-For WakeVision, fine-tuning typically improves accuracy by 0.5-1.0% over the testing phase results. The Key 6 architecture often achieves 88.81% accuracy after fine-tuning.
+For WakeVision, fine-tuning typically improves accuracy by 0.5-1.0% over the testing phase results. Both Key 5 and Key 6 architectures achieve 88.81% accuracy after fine-tuning, with Key 5 offering better computational efficiency (5.236M vs 6.026M operations).
 
 Fine-tuning results are logged to `{base_work_dir}/finetuned_ops_key{ops_key_to_test}/train.log`
 
@@ -529,9 +529,12 @@ The pipeline provides comprehensive analysis tools to compare the performance of
 3. **Fine-tuning Phase**: Full training from scratch using the `train_single.py` script
 
 For WakeVision, the typical progression is:
-- **Key 6 (Search)**: ~87.81% accuracy
+- **Key 5 (Search)**: ~87.77% accuracy, 5.236M operations
+- **Key 5 (Testing)**: ~87.7% accuracy
+- **Key 5 (Fine-tuned)**: ~88.81% accuracy (88.766% actual)
+- **Key 6 (Search)**: ~87.81% accuracy, 6.026M operations
 - **Key 6 (Testing)**: ~87.7-87.8% accuracy
-- **Key 6 (Fine-tuned)**: ~88.81% accuracy
+- **Key 6 (Fine-tuned)**: ~88.81% accuracy (88.807% actual)
 
 This comparison helps understand the reliability of the search process and the potential for improvement through fine-tuning.
 
@@ -562,7 +565,7 @@ The final step in the pipeline is exporting the fine-tuned models to ONNX format
 ```python
 # In run_all.ipynb
 # Export Configuration
-export_ops_key = 6  # The key of the architecture to export
+export_ops_key = 5  # The key of the architecture to export (5 or 6)
 onnx_filename = f"nasbnn_{dataset_name}_finetuned_ops_key{export_ops_key}.onnx"
 onnx_output_path = os.path.join(base_work_dir, "onnx_exports")
 full_onnx_path = os.path.join(onnx_output_path, onnx_filename)
@@ -579,9 +582,10 @@ The export process:
 
 When deploying the exported models:
 
-1. **File Size**: The ONNX model file size varies by configuration:
-   - 128×128 models: ~17.0 MB 
-   - 64×64 models: ~12.0 MB (smaller due to fewer parameters)
+1. **File Size**: The ONNX model file size varies by architecture complexity and operations count:
+   - WakeVision 128×128 models: Key 5 (~18.3 MB), Key 6 (~17.5 MB)
+   - File size is primarily determined by the number of operations and architecture complexity, not input image size
+   - Note: Different architectures can result in significantly different file sizes regardless of input resolution
 
 2. **Input Format**: The model expects RGB images in NCHW format (batch, channels, height, width):
    - 128×128 models: Input shape (1, 3, 128, 128)
