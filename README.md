@@ -142,12 +142,6 @@ graph TD
 | **📊 Analysis** | Performance metrics | Export for deployment |
 | **📦 Export** | ONNX models | Deploy to edge |
 
-### **💡 Key Features**
-🎯 **Multi-objective Optimization**: Balances 88.81% accuracy with 5-6M operations  
-⚡ **Efficient Search**: 10 generations discover optimal architectures automatically  
-🚀 **Deployment Ready**: Outputs 17-18MB ONNX models for immediate edge deployment  
-🔧 **Robust Pipeline**: Complete error handling and resume capabilities
-
 ---
 
 ## 🔧 **Technical Improvements**
