@@ -121,134 +121,105 @@ Execute cells sequentially in `run_all.ipynb`:
 ### **Complete NAS-BNN Workflow**
 
 ```mermaid
-graph TB
+flowchart TD
     %% Data Preparation Stage
-    subgraph "🗃️ Data Preparation"
-        A1[WakeVision CSV Files] --> A2[prepare_local_wake_vision_from_csv.py]
-        A3[HuggingFace Dataset] --> A4[prepare_wakevision.py]
-        A2 --> A5[Image Resizing 128×128]
-        A4 --> A5
-        A5 --> A6[data/wakevision/train_large<br/>data/wakevision/val<br/>data/wakevision/test]
-        A7[Image Size Consistency Check] --> A5
-        A8[TARGET_IMAGE_SIZE validation] --> A7
+    subgraph DP ["🗃️ Data Preparation"]
+        direction TB
+        A1("WakeVision Dataset<br/>📊 500k Images")
+        A2("Image Processing<br/>🖼️ 128×128 Resize")
+        A3("Data Validation<br/>✅ Size Consistency")
+        A1 --> A2 --> A3
     end
 
-    %% Supernet Training Stage
-    subgraph "🏗️ Supernet Training"
-        B1[Supernet Architecture<br/>superbnn_wakevision_large] --> B2[Weight Sharing Strategy]
-        B2 --> B3[Binary Weight Training]
-        B3 --> B4[Random Subnetwork Sampling]
-        B4 --> B5[Gradient Updates]
-        B5 --> B6[Checkpoint Saving<br/>work_dirs/.../checkpoint.pth.tar]
-        B7[Training Configuration<br/>120 epochs, batch=128] --> B1
-        B8[Loss: CrossEntropy<br/>Optimizer: SGD] --> B3
+    %% Supernet Training Stage  
+    subgraph ST ["🏗️ Supernet Training"]
+        direction TB
+        B1("Architecture Definition<br/>🧠 superbnn_wakevision_large")
+        B2("Binary Weight Training<br/>⚡ 120 Epochs")
+        B3("Weight Sharing<br/>🔄 Subnetwork Sampling")
+        B1 --> B2 --> B3
     end
 
     %% Architecture Search Stage
-    subgraph "🔍 Neural Architecture Search"
-        C1[Population Initialization<br/>50 random architectures] --> C2[Evolutionary Algorithm]
-        C2 --> C3[Architecture Evaluation]
-        C3 --> C4[Operations Count<br/>3.8M - 6.2M range]
-        C3 --> C5[Accuracy Assessment<br/>Quick validation]
-        C4 --> C6[Pareto Front Update]
-        C5 --> C6
-        C6 --> C7{Epoch < 10?}
-        C7 -->|Yes| C8[Mutation & Crossover<br/>25 mutations, 25 crossovers]
-        C8 --> C2
-        C7 -->|No| C9[Final Pareto Front<br/>Key 3,4,5,6 architectures]
-        C9 --> C10[Save Results<br/>search/info.pth.tar]
-        C11[Fitness Function<br/>Accuracy vs Efficiency] --> C6
+    subgraph AS ["🔍 Neural Architecture Search"] 
+        direction TB
+        C1("Population Init<br/>👥 50 Architectures")
+        C2("Evolutionary Search<br/>🧬 10 Generations")
+        C3("Pareto Optimization<br/>⚖️ Accuracy vs Efficiency")
+        C4("Optimal Solutions<br/>🎯 Key 3,4,5,6")
+        C1 --> C2 --> C3 --> C4
     end
 
-    %% Testing & Validation Stage
-    subgraph "🧪 Architecture Testing"
-        D1[Select Promising Keys<br/>Key 5, Key 6] --> D2[Architecture Extraction]
-        D2 --> D3[Supernet Weight Loading]
-        D3 --> D4[Extended Evaluation<br/>test.py script]
-        D4 --> D5[Performance Validation<br/>~87.7-87.8% accuracy]
-        D5 --> D6[Architecture Ranking]
-        D6 --> D7[Fine-tuning Candidates<br/>Best 2 architectures]
+    %% Testing & Fine-tuning Stage
+    subgraph TF ["🧪 Testing & Fine-tuning"]
+        direction TB
+        D1("Architecture Testing<br/>📊 Key 5 & 6")
+        D2("Performance Validation<br/>✅ 87.7-87.8%")
+        D3("Fine-tuning Training<br/>🎯 From Scratch")
+        D4("Final Results<br/>🏆 88.81% Accuracy")
+        D1 --> D2 --> D3 --> D4
     end
 
-    %% Fine-tuning Stage
-    subgraph "⚡ Fine-tuning"
-        E1[Key 5 Architecture<br/>5.236M operations] --> E2[From-scratch Training<br/>train_single.py]
-        E3[Key 6 Architecture<br/>6.026M operations] --> E4[From-scratch Training<br/>train_single.py]
-        E2 --> E5[Optimized Training<br/>30 epochs, lr=0.01]
-        E4 --> E5
-        E5 --> E6[Final Accuracies<br/>Key 5: 88.766%<br/>Key 6: 88.807%]
-        E6 --> E7[Model Checkpoints<br/>finetuned_ops_key5/<br/>finetuned_ops_key6/]
+    %% Export & Deployment Stage
+    subgraph ED ["📦 Export & Deployment"]
+        direction TB
+        E1("Model Selection<br/>🎯 Key 5 or Key 6")
+        E2("ONNX Export<br/>📤 Optimization")
+        E3("Deployment Package<br/>🚀 17-18 MB")
+        E1 --> E2 --> E3
     end
 
-    %% Analysis & Export Stage
-    subgraph "📊 Analysis & Export"
-        F1[Performance Analysis] --> F2[Accuracy Comparison<br/>Search vs Fine-tuned]
-        F2 --> F3[Pareto Front Visualization]
-        F1 --> F4[Efficiency Metrics<br/>Operations, Inference Time]
-        F3 --> F5[Results Documentation]
-        F4 --> F5
-        F5 --> F6[Architecture Selection<br/>Key 5 or Key 6]
-        F6 --> F7[ONNX Export<br/>export_ops_key selection]
-        F7 --> F8[Deployment Package<br/>Key 5: 18.3MB<br/>Key 6: 17.5MB]
-        F9[Model Optimization<br/>Constant folding] --> F7
-    end
+    %% Main Flow
+    DP --> ST
+    ST --> AS  
+    AS --> TF
+    TF --> ED
 
-    %% Data Flow Connections
-    A6 --> B1
-    B6 --> C1
-    C10 --> D1
-    D7 --> E1
-    D7 --> E3
-    E7 --> F1
-    F8 --> G1[🚀 Edge Deployment]
+    %% Key Results Annotations
+    AR1["🎯 Key Results<br/>• Key 5: 5.236M ops, 88.81%<br/>• Key 6: 6.026M ops, 88.81%<br/>• ONNX: 17-18 MB<br/>• Edge-ready deployment"]
+    
+    %% Connect annotation
+    ED -.-> AR1
 
-    %% Configuration Dependencies
-    subgraph "⚙️ Configuration Management"
-        G2[run_all.ipynb<br/>Central Configuration] --> G3[Image Size: 128×128<br/>Architecture: superbnn_wakevision_large]
-        G3 --> G4[Training Parameters<br/>Epochs, Batch Size, LR]
-        G3 --> G5[Search Parameters<br/>Population, Generations, Bounds]
-        G4 --> B7
-        G5 --> C1
-        G6[Cross-component Validation<br/>models/superbnn.py<br/>prepare_local_wake_vision_from_csv.py] --> A8
-    end
+    %% Enhanced Styling for Better Visibility
+    classDef dataStyle fill:#E3F2FD,stroke:#1976D2,stroke-width:3px,color:#0D47A1,font-weight:bold,font-size:12px
+    classDef trainStyle fill:#F3E5F5,stroke:#7B1FA2,stroke-width:3px,color:#4A148C,font-weight:bold,font-size:12px  
+    classDef searchStyle fill:#E8F5E8,stroke:#388E3C,stroke-width:3px,color:#1B5E20,font-weight:bold,font-size:12px
+    classDef testStyle fill:#FFF3E0,stroke:#F57C00,stroke-width:3px,color:#E65100,font-weight:bold,font-size:12px
+    classDef exportStyle fill:#FCE4EC,stroke:#C2185B,stroke-width:3px,color:#880E4F,font-weight:bold,font-size:12px
+    classDef resultStyle fill:#FFFDE7,stroke:#F9A825,stroke-width:3px,color:#F57F17,font-weight:bold,font-size:11px
 
-    %% Error Handling & Monitoring
-    subgraph "🔧 Error Handling"
-        H1[CUDA Memory Management] --> H2[Batch Size Adjustment]
-        H3[Image Size Mismatch Detection] --> H4[Configuration Validation]
-        H5[Training Resume Capability] --> H6[Checkpoint Recovery]
-        H2 --> B3
-        H4 --> A7
-        H6 --> B1
-    end
+    %% Apply Styles
+    class A1,A2,A3 dataStyle
+    class B1,B2,B3 trainStyle  
+    class C1,C2,C3,C4 searchStyle
+    class D1,D2,D3,D4 testStyle
+    class E1,E2,E3 exportStyle
+    class AR1 resultStyle
 
-    %% Styling
-    classDef dataStage fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    classDef trainStage fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    classDef searchStage fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
-    classDef testStage fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    classDef exportStage fill:#fce4ec,stroke:#880e4f,stroke-width:2px
-    classDef configStage fill:#f1f8e9,stroke:#33691e,stroke-width:2px
-    classDef errorStage fill:#ffebee,stroke:#b71c1c,stroke-width:2px
-
-    class A1,A2,A3,A4,A5,A6,A7,A8 dataStage
-    class B1,B2,B3,B4,B5,B6,B7,B8 trainStage
-    class C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11 searchStage
-    class D1,D2,D3,D4,D5,D6,D7 testStage
-    class E1,E2,E3,E4,E5,E6,E7 testStage
-    class F1,F2,F3,F4,F5,F6,F7,F8,F9 exportStage
-    class G1,G2,G3,G4,G5,G6 configStage
-    class H1,H2,H3,H4,H5,H6 errorStage
+    %% Subgraph Styling for Better Contrast
+    style DP fill:#E3F2FD20,stroke:#1976D2,stroke-width:2px,stroke-dasharray: 5 5
+    style ST fill:#F3E5F520,stroke:#7B1FA2,stroke-width:2px,stroke-dasharray: 5 5
+    style AS fill:#E8F5E820,stroke:#388E3C,stroke-width:2px,stroke-dasharray: 5 5  
+    style TF fill:#FFF3E020,stroke:#F57C00,stroke-width:2px,stroke-dasharray: 5 5
+    style ED fill:#FCE4EC20,stroke:#C2185B,stroke-width:2px,stroke-dasharray: 5 5
 ```
 
-### **Key Pipeline Features**
+### **🔄 Pipeline Flow Highlights**
 
-🔄 **Iterative Process**: The evolutionary search runs for 10 generations with continuous improvement  
-⚖️ **Multi-objective Optimization**: Balances accuracy (87-88%) with efficiency (3.8-6.2M operations)  
-🎯 **Pareto-optimal Solutions**: Discovers 4 architectures representing different accuracy-efficiency trade-offs  
-🔧 **Robust Configuration**: Ensures image size consistency across all pipeline components  
-📊 **Comprehensive Analysis**: From quick search evaluation to thorough fine-tuning validation  
-🚀 **Deployment-ready**: Outputs optimized ONNX models ready for edge device deployment
+| Stage | Duration | Key Output | Next Action |
+|-------|----------|------------|-------------|
+| **🗃️ Data Prep** | ~1 hour | Formatted dataset | Start supernet training |
+| **🏗️ Supernet** | ~24-48 hours | Trained weights | Launch architecture search |
+| **🔍 Search** | ~6-8 hours | Pareto front | Test best candidates |
+| **🧪 Testing** | ~2-4 hours | Validated archs | Fine-tune winners |
+| **📦 Export** | ~30 minutes | ONNX models | Deploy to edge |
+
+### **💡 Key Features**
+🎯 **Multi-objective Optimization**: Balances 88.81% accuracy with 5-6M operations  
+⚡ **Efficient Search**: 10 generations discover optimal architectures automatically  
+🚀 **Deployment Ready**: Outputs 17-18MB ONNX models for immediate edge deployment  
+🔧 **Robust Pipeline**: Complete error handling and resume capabilities
 
 ---
 
