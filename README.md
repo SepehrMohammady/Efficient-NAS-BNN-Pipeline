@@ -138,7 +138,9 @@ graph TD
 | **🏗️ Supernet** | ~24-48 hours | Trained weights | Launch architecture search |
 | **🔍 Search** | ~6-8 hours | Pareto front | Test best candidates |
 | **🧪 Testing** | ~2-4 hours | Validated archs | Fine-tune winners |
-| **📦 Export** | ~30 minutes | ONNX models | Deploy to edge |
+| **🎯 Fine-tuning** | ~12-24 hours | Optimized models | Analyze & visualize |
+| **📊 Analysis** | ~30 minutes | Performance metrics | Export for deployment |
+| **📦 Export** | ~2 minutes | ONNX models | Deploy to edge |
 
 ### **💡 Key Features**
 🎯 **Multi-objective Optimization**: Balances 88.81% accuracy with 5-6M operations  
