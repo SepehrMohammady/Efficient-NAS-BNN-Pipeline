@@ -118,15 +118,137 @@ Execute cells sequentially in `run_all.ipynb`:
 
 ## 📊 **Pipeline Architecture**
 
+### **Complete NAS-BNN Workflow**
+
 ```mermaid
-graph TD
-    A[Dataset Preparation] --> B[Supernet Training]
-    B --> C[Evolutionary Search]
-    C --> D[Architecture Testing]
-    D --> E[Fine-tuning]
-    E --> F[Analysis & Visualization]
-    F --> G[ONNX Export]
+graph TB
+    %% Data Preparation Stage
+    subgraph "🗃️ Data Preparation"
+        A1[WakeVision CSV Files] --> A2[prepare_local_wake_vision_from_csv.py]
+        A3[HuggingFace Dataset] --> A4[prepare_wakevision.py]
+        A2 --> A5[Image Resizing 128×128]
+        A4 --> A5
+        A5 --> A6[data/wakevision/train_large<br/>data/wakevision/val<br/>data/wakevision/test]
+        A7[Image Size Consistency Check] --> A5
+        A8[TARGET_IMAGE_SIZE validation] --> A7
+    end
+
+    %% Supernet Training Stage
+    subgraph "🏗️ Supernet Training"
+        B1[Supernet Architecture<br/>superbnn_wakevision_large] --> B2[Weight Sharing Strategy]
+        B2 --> B3[Binary Weight Training]
+        B3 --> B4[Random Subnetwork Sampling]
+        B4 --> B5[Gradient Updates]
+        B5 --> B6[Checkpoint Saving<br/>work_dirs/.../checkpoint.pth.tar]
+        B7[Training Configuration<br/>120 epochs, batch=128] --> B1
+        B8[Loss: CrossEntropy<br/>Optimizer: SGD] --> B3
+    end
+
+    %% Architecture Search Stage
+    subgraph "🔍 Neural Architecture Search"
+        C1[Population Initialization<br/>50 random architectures] --> C2[Evolutionary Algorithm]
+        C2 --> C3[Architecture Evaluation]
+        C3 --> C4[Operations Count<br/>3.8M - 6.2M range]
+        C3 --> C5[Accuracy Assessment<br/>Quick validation]
+        C4 --> C6[Pareto Front Update]
+        C5 --> C6
+        C6 --> C7{Epoch < 10?}
+        C7 -->|Yes| C8[Mutation & Crossover<br/>25 mutations, 25 crossovers]
+        C8 --> C2
+        C7 -->|No| C9[Final Pareto Front<br/>Key 3,4,5,6 architectures]
+        C9 --> C10[Save Results<br/>search/info.pth.tar]
+        C11[Fitness Function<br/>Accuracy vs Efficiency] --> C6
+    end
+
+    %% Testing & Validation Stage
+    subgraph "🧪 Architecture Testing"
+        D1[Select Promising Keys<br/>Key 5, Key 6] --> D2[Architecture Extraction]
+        D2 --> D3[Supernet Weight Loading]
+        D3 --> D4[Extended Evaluation<br/>test.py script]
+        D4 --> D5[Performance Validation<br/>~87.7-87.8% accuracy]
+        D5 --> D6[Architecture Ranking]
+        D6 --> D7[Fine-tuning Candidates<br/>Best 2 architectures]
+    end
+
+    %% Fine-tuning Stage
+    subgraph "⚡ Fine-tuning"
+        E1[Key 5 Architecture<br/>5.236M operations] --> E2[From-scratch Training<br/>train_single.py]
+        E3[Key 6 Architecture<br/>6.026M operations] --> E4[From-scratch Training<br/>train_single.py]
+        E2 --> E5[Optimized Training<br/>30 epochs, lr=0.01]
+        E4 --> E5
+        E5 --> E6[Final Accuracies<br/>Key 5: 88.766%<br/>Key 6: 88.807%]
+        E6 --> E7[Model Checkpoints<br/>finetuned_ops_key5/<br/>finetuned_ops_key6/]
+    end
+
+    %% Analysis & Export Stage
+    subgraph "📊 Analysis & Export"
+        F1[Performance Analysis] --> F2[Accuracy Comparison<br/>Search vs Fine-tuned]
+        F2 --> F3[Pareto Front Visualization]
+        F1 --> F4[Efficiency Metrics<br/>Operations, Inference Time]
+        F3 --> F5[Results Documentation]
+        F4 --> F5
+        F5 --> F6[Architecture Selection<br/>Key 5 or Key 6]
+        F6 --> F7[ONNX Export<br/>export_ops_key selection]
+        F7 --> F8[Deployment Package<br/>Key 5: 18.3MB<br/>Key 6: 17.5MB]
+        F9[Model Optimization<br/>Constant folding] --> F7
+    end
+
+    %% Data Flow Connections
+    A6 --> B1
+    B6 --> C1
+    C10 --> D1
+    D7 --> E1
+    D7 --> E3
+    E7 --> F1
+    F8 --> G1[🚀 Edge Deployment]
+
+    %% Configuration Dependencies
+    subgraph "⚙️ Configuration Management"
+        G2[run_all.ipynb<br/>Central Configuration] --> G3[Image Size: 128×128<br/>Architecture: superbnn_wakevision_large]
+        G3 --> G4[Training Parameters<br/>Epochs, Batch Size, LR]
+        G3 --> G5[Search Parameters<br/>Population, Generations, Bounds]
+        G4 --> B7
+        G5 --> C1
+        G6[Cross-component Validation<br/>models/superbnn.py<br/>prepare_local_wake_vision_from_csv.py] --> A8
+    end
+
+    %% Error Handling & Monitoring
+    subgraph "🔧 Error Handling"
+        H1[CUDA Memory Management] --> H2[Batch Size Adjustment]
+        H3[Image Size Mismatch Detection] --> H4[Configuration Validation]
+        H5[Training Resume Capability] --> H6[Checkpoint Recovery]
+        H2 --> B3
+        H4 --> A7
+        H6 --> B1
+    end
+
+    %% Styling
+    classDef dataStage fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef trainStage fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef searchStage fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef testStage fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef exportStage fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef configStage fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+    classDef errorStage fill:#ffebee,stroke:#b71c1c,stroke-width:2px
+
+    class A1,A2,A3,A4,A5,A6,A7,A8 dataStage
+    class B1,B2,B3,B4,B5,B6,B7,B8 trainStage
+    class C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11 searchStage
+    class D1,D2,D3,D4,D5,D6,D7 testStage
+    class E1,E2,E3,E4,E5,E6,E7 testStage
+    class F1,F2,F3,F4,F5,F6,F7,F8,F9 exportStage
+    class G1,G2,G3,G4,G5,G6 configStage
+    class H1,H2,H3,H4,H5,H6 errorStage
 ```
+
+### **Key Pipeline Features**
+
+🔄 **Iterative Process**: The evolutionary search runs for 10 generations with continuous improvement  
+⚖️ **Multi-objective Optimization**: Balances accuracy (87-88%) with efficiency (3.8-6.2M operations)  
+🎯 **Pareto-optimal Solutions**: Discovers 4 architectures representing different accuracy-efficiency trade-offs  
+🔧 **Robust Configuration**: Ensures image size consistency across all pipeline components  
+📊 **Comprehensive Analysis**: From quick search evaluation to thorough fine-tuning validation  
+🚀 **Deployment-ready**: Outputs optimized ONNX models ready for edge device deployment
 
 ---
 
