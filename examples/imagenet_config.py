@@ -23,16 +23,16 @@ train_supernet_wd = "1e-5"
 search_max_epochs = 20
 search_population_num = 1024 # Original paper setting
 # OPs range based on ImageNet results (ReActNet-A is ~87M, NAS-BNN ~57M)
-search_ops_min = 40.0
-search_ops_max = 100.0
-search_step = 2.0
+search_ops_min = 3.0
+search_ops_max = 8.0
+search_step = 0.5
 
 # --- Test Parameters ---
 # Keys approximately matching 57M and 80M OPs
-ops_key_to_test1 = 56
-ops_key_to_test2 = 88
+ops_key_to_test1 = 5
+ops_key_to_test2 = 8
 
 # --- Fine-tuning Parameters ---
 finetune_batch_size = 32 # Reduced for VRAM
 finetune_lr = "5e-5"
-finetune_epochs = 50 # Full reproduction typically 300-512
+finetune_epochs = 20 # Full reproduction typically 300-512
