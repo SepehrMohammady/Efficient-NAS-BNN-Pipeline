@@ -22,30 +22,93 @@ def prepare_imagenet(root_dir):
         return
 
     # --- 1. Prepare Training Data ---
-    print("\n📦 1/2: Processing Training Data (this can take 30-60 mins)...")
+    print("\n📦 1/2: Processing Training Data...")
     train_dir = os.path.join(root_dir, 'train')
     os.makedirs(train_dir, exist_ok=True)
     
-    # Extract main train tar
-    print("   Extracting main training tar...")
-    with tarfile.open(train_tar) as tar:
-        tar.extractall(train_dir)
-        
-    # Extract sub-tars (each synset is a .tar)
-    sub_tars = [f for f in os.listdir(train_dir) if f.endswith('.tar')]
-    print(f"   Extracting {len(sub_tars)} class sub-tars...")
+    # Check if we need to extract the main tar
+    # Logic: If we haven't processed all 1000 classes, we might need the main tar.
+    # But re-extracting 138GB is slow. 
+    # Let's inspect what's currently in train_dir.
+    existing_items = os.listdir(train_dir)
+    existing_tars = [f for f in existing_items if f.endswith('.tar')]
+    existing_dirs = [f for f in existing_items if os.path.isdir(os.path.join(train_dir, f))]
     
-    for tar_file in tqdm(sub_tars):
-        full_path = os.path.join(train_dir, tar_file)
-        class_name = tar_file.split('.')[0]
-        class_dir = os.path.join(train_dir, class_name)
-        
-        os.makedirs(class_dir, exist_ok=True)
-        with tarfile.open(full_path) as tar:
-            tar.extractall(class_dir)
-        
-        # Remove the sub-tar to save space
-        os.remove(full_path)
+    print(f"   Found {len(existing_tars)} .tar files and {len(existing_dirs)} class directories in {train_dir}.")
+    
+    if len(existing_tars) == 0 and len(existing_dirs) == 0:
+        print("   Extracting main training tar (fresh start)...")
+        with tarfile.open(train_tar) as tar:
+            tar.extractall(train_dir)
+    elif len(existing_tars) > 0 and len(existing_dirs) < 1000:
+        print("   Found existing sub-tars. Skipping main tar extraction to process these first.")
+        # Note: If this was a partial run, missing sub-tars won't be recovered here.
+        # But usually 'extractall' runs linearly. If we have some tars, we process them.
+        # If the user stopped 'extractall' of the main tar, we might be missing the HEADER of the rest.
+        # Ideally we'd iterate the main tar and extract missing ones.
+        # checking 1000 items is fast.
+        pass 
+    else:
+        print("   Checking for missing classes from main tar...")
+        # Optional: Robust check could go here, but let's assume if we have dirs/tars we move on
+        pass
+
+    # Re-scan for tars (in case we just extracted them, or they were sitting there)
+    sub_tars = [f for f in os.listdir(train_dir) if f.endswith('.tar')]
+    
+    if len(sub_tars) > 0:
+        print(f"   Processing {len(sub_tars)} class sub-tars (Partial Resume)...")
+        for tar_file in tqdm(sub_tars):
+            full_path = os.path.join(train_dir, tar_file)
+            class_name = tar_file.split('.')[0]
+            class_dir = os.path.join(train_dir, class_name)
+            
+            # If .tar exists, we assume we need to extract it to be safe.
+            # (If we interrupted mid-extraction, the folder exists but is partial.
+            #  Re-extracting overwrites and ensures integrity.)
+            os.makedirs(class_dir, exist_ok=True)
+            try:
+                with tarfile.open(full_path) as tar:
+                    tar.extractall(class_dir)
+                os.remove(full_path) # Delete tar after successful extraction
+            except Exception as e:
+                print(f"Error processing {tar_file}: {e}")
+
+    # --- FINAL CHECK: Do we have all 1000 classes? ---
+    existing_dirs = [d for d in os.listdir(train_dir) if os.path.isdir(os.path.join(train_dir, d))]
+    if len(existing_dirs) < 1000:
+         print(f"   ⚠️ Found only {len(existing_dirs)}/1000 classes. Scanning main tar for missing keys...")
+         # We need to extract the ones we miss.
+         # This is slow but necessary for integrity.
+         with tarfile.open(train_tar) as tar:
+            for member in tqdm(tar, desc="Scanning main tar"):
+                if member.name.endswith('.tar'):
+                    class_name = member.name.split('.')[0]
+                    class_dir_path = os.path.join(train_dir, class_name)
+                    
+                    # If this class is already done, skip
+                    if os.path.exists(class_dir_path) and len(os.listdir(class_dir_path)) > 0:
+                        continue
+                    
+                    # Also skip if the tar textfile is already there (though we should have processed it above)
+                    if os.path.exists(os.path.join(train_dir, member.name)):
+                        continue
+                    
+                    # Extract this specific missing sub-tar
+                    tar.extract(member, train_dir)
+         
+         # Now process the newly extracted ones
+         sub_tars = [f for f in os.listdir(train_dir) if f.endswith('.tar')]
+         if len(sub_tars) > 0:
+             print(f"   Extracting {len(sub_tars)} missing sub-tars...")
+             for tar_file in tqdm(sub_tars, desc="Finalizing extraction"):
+                full_path = os.path.join(train_dir, tar_file)
+                class_name = tar_file.split('.')[0]
+                class_dir = os.path.join(train_dir, class_name)
+                os.makedirs(class_dir, exist_ok=True)
+                with tarfile.open(full_path) as tar:
+                    tar.extractall(class_dir)
+                os.remove(full_path)
 
     # --- 2. Prepare Validation Data ---
     print("\n📦 2/2: Processing Validation Data...")
@@ -119,7 +182,7 @@ if __name__ == "__main__":
     # Hardcoded default path or user input
     default_path = "./data/imagenet"
     print(f"Default path: {default_path}")
-    user_path = input("Enter path to folder containing .tar files (press Enter for default): ").strip()
-    target_path = user_path if user_path else default_path
+    # user_path = input("Enter path to folder containing .tar files (press Enter for default): ").strip()
+    user_path = default_path # Force default for automation
     
-    prepare_imagenet(target_path)
+    prepare_imagenet(user_path)
