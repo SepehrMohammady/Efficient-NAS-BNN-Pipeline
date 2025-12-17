@@ -422,6 +422,18 @@ def superbnn(sub_path=None):
     return SuperBNN(cfg, 1000, 224, sub_path)
 
 
+def superbnn_128(sub_path=None):
+    """ImageNet-1000 architecture for 128x128 inputs."""
+    # Same config as superbnn but with img_size=128
+    cfg = [[[24, 32, 48], [1], [3], [1], [1], 2],
+           [[48, 64, 96], [2, 3], [3], [1], [1], 1],
+           [[96, 128, 192], [2, 3], [3, 5], [1, 2], [1], 2],
+           [[192, 256, 384], [2, 3], [3, 5], [2, 4], [1], 2],
+           [[384, 512, 768], [8, 9], [3, 5], [4, 8], [1], 2],
+           [[768, 1024, 1536], [2, 3], [3, 5], [8, 16], [1], 2]]
+    return SuperBNN(cfg, 1000, 128, sub_path)
+
+
 def superbnn_100(sub_path=None):
     # (channels, num_blocks, ks, groups1, groups2, stride)
     cfg = [[[24, 32, 48], [1], [3], [1], [1], 2],

@@ -4,10 +4,10 @@
 from . import _utils # Makes _utils._ONNX_EXPORTING available globally within the models package if accessed as models._utils._ONNX_EXPORTING
 
 # Then your other model and operation imports
-from .superbnn import SuperBNN, superbnn, superbnn_100, superbnn_cifar10, superbnn_cifar10_large, superbnn_wakevision_large # Corrected: SuperBNN is the class
+from .superbnn import SuperBNN, superbnn, superbnn_128, superbnn_100, superbnn_cifar10, superbnn_cifar10_large, superbnn_wakevision_large # Corrected: SuperBNN is the class
 from .dynamic_operations import (DynamicBatchNorm2d, DynamicBinConv2d,
                                  DynamicFPLinear, DynamicLearnableBias,
                                  DynamicPReLU, DynamicQConv2d)
 from .operations import BinaryActivation # Assuming this is just a simple activation
 
-__all__ = ['SuperBNN', 'superbnn', 'superbnn_100', 'superbnn_cifar10', 'superbnn_cifar10_large', 'superbnn_wakevision_large'] # Added SuperBNN class to __all__
+__all__ = ['SuperBNN', 'superbnn', 'superbnn_128', 'superbnn_100', 'superbnn_cifar10', 'superbnn_cifar10_large', 'superbnn_wakevision_large'] # Added SuperBNN class to __all__
